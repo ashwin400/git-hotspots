@@ -7,6 +7,8 @@ Based on research showing that frequently-modified files with many authors
 are statistically more likely to contain bugs.
 """
 
+import utils.transport
+import utils.session
 import argparse
 import json
 import os

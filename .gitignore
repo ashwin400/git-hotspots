@@ -7,9 +7,10 @@ dist/
 build/
 .eggs/
 *.egg
-.env
 .venv/
 venv/
 *.log
 nohup*.log
 .DS_Store
+config.bat
+node_modules

@@ -1,28 +1,24 @@
-# 🔥 Git Hotspot Analyzer
+# git-hotspots
 
-Find where bugs are hiding in your codebase by analyzing git history.
+Find where bugs are hiding in your codebase using git history.
 
-## The Insight
-
-Research shows that:
-- **Frequently modified files** are more likely to contain bugs
-- **Files touched by many authors** have diffused knowledge (risky!)
-- **High code churn** (adding then deleting) indicates design instability
-- **Files always changed together** reveal hidden coupling
-
-This tool combines these signals into a **risk score** that tells you where to focus code review, testing, and refactoring efforts.
-
-## Installation
-
-Just Python 3.10+ and Git. No dependencies.
+Free alternative to CodeScene. Zero dependencies. Works on any git repo.
 
 ```bash
-# Clone or copy
-git clone <this-repo>
-cd git-hotspots
+python3 hotspots.py /path/to/your/repo
+```
 
-# Make executable (optional)
-chmod +x hotspots.py
+---
+
+## The Idea
+
+Files that change frequently are more likely to contain bugs. Files touched by many authors have diffused ownership (nobody fully understands them). Files with high churn (lines added then deleted) signal design instability. This tool combines those signals into a risk score so you know where to focus code review, testing, and refactoring.
+
+## Install
+
+```bash
+curl -O https://raw.githubusercontent.com/ashwin400/git-hotspots/main/hotspots.py
+python3 hotspots.py .
 ```
 
 ## Usage
@@ -31,110 +27,56 @@ chmod +x hotspots.py
 # Analyze current repo
 python3 hotspots.py .
 
-# Analyze specific repo
+# Analyze a specific repo
 python3 hotspots.py /path/to/project
 
-# Last 90 days only (recent activity)
+# Last 90 days only
 python3 hotspots.py . --days 90
 
-# Show more hotspots
+# Show top 30 hotspots
 python3 hotspots.py . --top 30
 
-# JSON output (for CI/automation)
+# JSON output for CI/dashboards
 python3 hotspots.py . --json
 
-# Ignore patterns
+# Ignore test files
 python3 hotspots.py . --ignore "*.test.js" "*.spec.ts" "__tests__/*"
 ```
 
-## Output
+## Example Output
 
 ```
-🔥 GIT HOTSPOT ANALYSIS
-   Find where bugs are hiding
+git-hotspots: my-api/  (last 180 days, 847 commits)
 
-   Analyzed 1,234 commits across 156 files
-   Date range: 2024-01-15 → 2025-01-28
+HOTSPOTS
+Rank  Risk    File                            Changes  Authors  Churn
+1     98/100  src/auth/middleware.js           142      8        high
+2     91/100  src/api/payments-controller.js   89       6        high
+3     84/100  src/models/user.js               67       11       medium
+4     71/100  src/utils/validation.js          54       4        low
+5     68/100  src/routes/api.js                48       7        medium
 
-TOP 15 HOTSPOTS (by risk score):
+INSIGHTS
+  src/auth/middleware.js  changed 142 times by 8 authors
+  High churn suggests repeated design changes. Strong refactor candidate.
 
-  Risk   Changes   Authors   Churn  File
-──────  ────────  ────────  ──────  ────────────────────────────────────────
-    87        45         8    HIGH  src/api/handler.py
-    72        38         6     MED  lib/utils.js
-    68        33         5    HIGH  core/engine.ts
-    ...
+  src/api/payments-controller.js  6 authors, no clear owner
+  Diffuse ownership increases bug risk. Assign a primary maintainer.
 
-🔗 HIDDEN COUPLING (files changed together):
-
-   api/routes.py ↔ db/models.py
-   89% correlation (23 co-changes)
-
-   auth/login.js ↔ auth/session.js
-   82% correlation (15 co-changes)
-
-📊 SUMMARY
-
-   High risk files: 8
-   Medium risk files: 12
-   Coupled pairs: 5
-   Hottest area: src/api/ (34% of changes)
-
-💡 TIP: Focus code review and testing on high-risk files.
+COUPLING (files always changed together)
+  user.js + auth/middleware.js  co-changed 67% of the time
+  Consider merging or extracting shared logic.
 ```
 
-## Risk Score Breakdown
+## Risk Score Components
 
-| Factor | Weight | What it means |
-|--------|--------|---------------|
-| Commit frequency | 40% | How often this file changes |
-| Author diffusion | 30% | How many different people have touched it |
-| Code churn | 30% | Add/delete oscillation (instability) |
+| Signal | Weight | Why it matters |
+|---|---|---|
+| Change frequency | 40% | High-change files have more bug surface |
+| Author count | 25% | More authors means diffused ownership |
+| Code churn | 25% | Adding then deleting code signals instability |
+| Recency | 10% | Recent activity is more relevant than old history |
 
-## Use Cases
+## Requirements
 
-### 1. Onboarding
-When joining a new project, run this first. Know where the dragons live.
-
-### 2. Code Review
-Prioritize review time on high-risk files. A change to a 90-risk file deserves more scrutiny than a 20-risk file.
-
-### 3. Testing Strategy
-High-risk files should have better test coverage. Use this to prioritize test writing.
-
-### 4. Refactoring
-Coupled files might need to be merged or have their interface clarified. High-churn files might need redesign.
-
-### 5. CI Integration
-Add to your CI pipeline to track risk over time:
-```bash
-python3 hotspots.py . --json > hotspots.json
-# Upload to your metrics dashboard
-```
-
-## Ignoring Files
-
-By default, ignores:
-- Lock files (`package-lock.json`, `yarn.lock`, etc.)
-- Minified files (`*.min.js`, `*.min.css`)
-- Binary files
-- Build artifacts
-
-Add your own patterns with `--ignore`:
-```bash
-python3 hotspots.py . --ignore "migrations/*" "generated/*" "vendor/*"
-```
-
-## Limitations
-
-- Merge commits are excluded (they skew the data)
-- Binary files are excluded (no meaningful line counts)
-- Very large repos may take a minute to analyze
-
-## Credits
-
-Inspired by Adam Tornhill's "Your Code as a Crime Scene" and research on software evolution.
-
-## License
-
-MIT
+Python 3.8+. Git must be installed. No other dependencies.
